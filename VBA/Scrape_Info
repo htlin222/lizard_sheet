@@ -1,0 +1,91 @@
+Sub DoGetInfo()
+'    histno = info.Range("B4")
+    histno = "27009423"
+    Call GetInfo(histno)
+End Sub
+Sub GetInfo(histno As String)
+    Set html = New HTMLDocument
+    URL = "https://web9.vghtpe.gov.tw/emr/qemr/qemr.cfm?action=findPba&histno=" & histno
+    If Not Connected Then Exit Sub
+    'Create connection to get the html
+    Set html = SaveHTML_Until_Id_Found(URL, "tab1")
+    With html
+        info.Range("A2").Value = .getElementsByTagName("td")(3).innerText 'BEDNO
+        info.Range("B2").Value = .getElementsByTagName("td")(5).innerText 'NAME
+        info.Range("C2").Value = .getElementsByTagName("td")(1).innerText 'HISTNO
+        info.Range("D2").Value = .getElementsByTagName("td")(7).innerText & .getElementsByTagName("td")(9).innerText   'AGE_SEX
+        info.Range("E2").Value = .getElementsByTagName("td")(35).innerText 'VS
+        info.Range("F2").Value = .getElementsByTagName("td")(17).innerText 'SERVICE
+    End With
+    Call GetCHEM(histno)
+    Call GetCBC(histno)
+    Call GetBGAS(histno)
+    Call GetWeight(histno)
+    With info.Range("K2")
+        .Value = Date
+        .NumberFormatLocal = "m/d;@"
+    End With
+    With info.Range("L2:X2")
+        'From Data in bot to ptlist
+        .Value = bot.Range("B2:N2").Value
+    End With
+    
+    bot.Range("5:9,12:16,20:20,24:24").Value = "-" 'Clear Data
+    Set trs = Nothing
+    Set tds = Nothing
+    Set html = Nothing
+End Sub
+
+Sub GetImpression(histno$)
+    Dim html As HTMLDocument
+    Dim text As String
+    Dim RE As Object
+    
+    URL = "https://web9.vghtpe.gov.tw/emr/qemr/qemr.cfm?action=findAdm&histno=" & histno & "&caseno=" & caseno
+    
+    Set RE = CreateObject("vbscript.regexp")
+    Dim RE_IO As Object
+    Set RE_IO = CreateObject("vbscript.regexp")
+    Dim histno As String
+    histno = PtList.Cells(patientIndex, 2).Value
+    
+    With RE
+        .Pattern = "(體重：)(\d+.\d)(\d+kg)"
+        .Global = True
+        .IgnoreCase = True
+    End With
+    With RE_IO
+        .Pattern = "I\/O.+:(\d+) \/ (\d+) diff = (\W?\d+)"
+        .Global = True
+        .IgnoreCase = True
+    End With
+
+    Set IE = GetObject("new:{D5E8041D-920F-45e9-B8FB-B1DEB82C6E5E}")
+    IE.navigate "https://web9.vghtpe.gov.tw/emr/qemr/qemr.cfm?action=findPhck&histno=" & histno
+    Call CountDown("weight", 2)
+    Set html = IE.document
+    
+    text = html.getElementsByTagName("tr")(0).innerText
+    'text = "體重：93.00kg"
+
+    Set allMatches = RE.Execute(text)
+    Result = allMatches.Item(0).submatches.Item(1)
+    info.Range("U" & patientIndex).Value = Result
+    
+    Set allMatches_IO = RE_IO.Execute(text)
+    
+    If allMatches_IO.count <> 0 Then
+        result_input = allMatches_IO.Item(0).submatches.Item(0)
+        result_output = allMatches_IO.Item(0).submatches.Item(1)
+        result_diff = allMatches_IO.Item(0).submatches.Item(2)
+        PtList.Range("V" & patientIndex).Value = "I/O: " & result_input & "/" & result_output & " (" & result_diff & ")"
+    Else
+        PtList.Range("V" & patientIndex).Value = "沒記辣"
+    End If
+
+    ' Clear all Object
+    Set html = Nothing
+    
+End Sub
+
+
