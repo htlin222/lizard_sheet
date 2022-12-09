@@ -31,26 +31,4 @@ if response ==1:
 else:
     driver.quit()
 
-# 之後的登入
-def get_html_from_url_with_cookie(url):
-    '''
-    as title, need cookie files
-    '''
-    options = Options()
-    options.headless = True
-    options.add_argument("--disable-notifications")
-    driver = webdriver.chrome(chrome_options=options)
-    driver.get(url)
-    #刪掉cookies
-    driver.delete_all_cookies()
-
-    with open('D:/test_cookies/db_cookie_1','rb') as cookie_json:
-        loaded_cookies = pickle.load(cookie_json)
-    for cookie in loaded_cookies:
-        driver.add_cookie(cookie)
-        print(cookie)
-    #帶我們保存的cookie訪問豆瓣
-    driver.get(url)
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
-    print('done')
-    return soup
+# 之後的操作都要用同一個driver
