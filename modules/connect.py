@@ -25,7 +25,7 @@ if response ==1:
     driver.get("https://web9.vghtpe.gov.tw/emr/qemr/qemr.cfm?action=findEmr&histno=46784901") #先連到我的病歷看一眼建立session
     driver.get("https://web9.vghtpe.gov.tw/emr/qemr/qemr.cfm?action=findPatient")
     cookies = driver.get_cookies()
-    with open('../local/cookies.json','wb') as f:
+    with open('cookies.json','wb') as f:
         pickle.dump(cookies,f)
     print ('done')
 else:
